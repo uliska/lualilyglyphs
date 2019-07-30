@@ -30,8 +30,26 @@
 %                                                                        %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\NeedsTeXFormat{LaTeX2e} 
+\NeedsTeXFormat{LaTeX2e}
 \ProvidesPackage{lilyglyphs}
+
+\RequirePackage{ifluatex,ifxetex}
+
+\ifluatex
+\else
+\typeout{}
+\typeout{lyluatex works with LuaLaTeX exclusively,}
+\typeout{aborting compilation.}
+\typeout{}
+\ifxetex
+\typeout{To continue using the package with XeLaTeX}
+\typeout{please use the fork `xelilyglyphs` instead.}
+\typeout
+\fi
+\stop
+\fi
+
+\RequirePackage{fontspec}
 
 % Introduce key=value options
 \RequirePackage{keyval}

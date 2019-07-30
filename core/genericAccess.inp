@@ -93,7 +93,7 @@
 \newcommand*{\lilyPrintImage}[2][]{%
 	% interpret optional argument
 	\interpretLilyOptions{#1}%
-	% determine scaling factor to accomodate the current font size 
+	% determine scaling factor to accomodate the current font size
 	% (as images don't scale automatically with the font)
 	\lilyScaleImage%
 	% Print the image in a raisebox
@@ -112,10 +112,7 @@
 
 % Determine the glyph by its OpenType glyphName
 
-\usepackage{ifluatex,ifxetex}
-
-\ifluatex
-\usepackage{luaotfload,luacode} 
+\usepackage{luaotfload,luacode}
 \begin{luacode}
 documentdata = documentdata or { }
 
@@ -127,19 +124,13 @@ documentdata.fontchar = function (chr)
 local chr = slot_of_name(font.current(), chr, false)
 if chr and type(chr) == "number" then
 texsprint
- (\the\CatcodeTableLaTeX, 
+ (\the\CatcodeTableLaTeX,
   stringformat ([[\char"%X"]], chr))
 end
 end
 \end{luacode}
 
 \def\lilyGetGlyph#1{\directlua{documentdata.fontchar "#1"}}
-\fi
-
-\ifxetex
-\newcommand*{\lilyGetGlyph}[1]{\XeTeXglyph\XeTeXglyphindex"#1" }
-\fi
-
 % Determine the glyph by its OpenType character number
 % (these may change with new versions of the fonts!)
 \newcommand*{\lilyGetGlyphByNumber}[1]{\char"#1 }
@@ -159,9 +150,9 @@ end
 	% set defaults
 	\setkeys{lilyDesignOptions}{scale=1,raise=0}%
 	\lilyPrint[#1]{\lilyGetGlyph{#2}}%
-}	
+}
 
-% Determine the glyph by its Unicode number 
+% Determine the glyph by its Unicode number
 % (works for those glyphs that reside in 'standard' places)
 \newcommand*{\lilyGlyphByNumber}[2][]{%
 	% set defaults
