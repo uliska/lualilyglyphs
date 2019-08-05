@@ -36,6 +36,19 @@ This document lists all changes in the development of *lilyglyphs*.
 All changes should be present in the manual, but only the finished versions printed bold are available as pdf downloads. (Latest changes are only found in the master branch of the git repository. They should be documentd in the lilyglyphs.tex file there too.)
 So the lines above the topmost bold version line represent the changes not available in the downloadable pdf documentation.
 
+
+- Remove command \lilyGetGlyphByNumber
+  \lilyGlyph can now discern itself if it has been passed a number
+  or a string and will try to produce the appropriate glyph.
+- Fork xelilyglyphs and drop XeLaTeX support
+  lilyglyphs will be continued as a Lua-only package.
+  For users depending on XeLaTeX the current state of the package
+  is forked as xelilyglyphs, but probably not developed further.
+
+(Renewed work starting July 2019)
+
+---
+
 0.2.3
 ---
 (2014-03-13)  
