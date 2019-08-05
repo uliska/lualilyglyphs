@@ -3,10 +3,9 @@
 %      This file is part of the 'lilyglyphs' LaTeX package.              %
 %                                ==========                              %
 %                                                                        %
-%              https://github.com/openlilylib/lilyglyphs                 %
-%               http://www.openlilylib.org/lilyglyphs                    %
+%              https://github.com/uliska/lilyglyphs                      %
 %                                                                        %
-%  Copyright 2012-2013 Urs Liska and others, ul@openlilylib.org          %
+%  Copyright 2012-2013, 2019 Urs Liska and others, git@ursliska.de       %
 %                                                                        %
 %  'lilyglyphs' is free software: you can redistribute it and/or modify  %
 %  it under the terms of the LaTeX Project Public License, either        %
@@ -51,27 +50,39 @@
 
 \RequirePackage{fontspec}
 
-% Introduce key=value options
-\RequirePackage{keyval}
-
-% Necessary for calculations.
-% TODO: Is that really necessary or can it be achieved much cheaper?
-\RequirePackage{pgf}
-
 % Create a vertically stacked box (time signatures)
 \RequirePackage[export]{adjustbox}
 
+% Use luaformatters (and luaoptions)
+\RequirePackage{luaformatters}
+
+\directlua{
+    _opts = lua_options
+    _opts.register('lilyglyphs', {
+      ['font'] = { 'Emmentaler' },
+      ['weight'] = { '16', '11', '13', '14', '18', '20', '23', '26' },
+      ['scale'] = { '1', _opts.is_num },
+      ['voffset'] = { '0', _opts.is_dim },
+    })
+}
+
+\addLuaFormatters{lilyglyphs-core.lua}
+\lilySetFont{Emmentaler}
+\lilySetWeight{16}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% TODO: Everything from here on is legacy code %
+%                                              %
+
 %%%%%%%%%%%%%%%%%%%%%%
 % Core functionality %
-
-% select from the optical sizes fonts
-\input{core/opticals.inp}
 
 % include the functionality for the key=value options
 \input{core/keyval.inp}
 
 % include the basic functionality to select and print glyphs
-\input{core/genericAccess.inp}
+\input{core/newgenericAccess.inp}
 
 % include logic and functionality to create dotted symbols
 \input{core/dotted.inp}

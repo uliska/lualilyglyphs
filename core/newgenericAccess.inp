@@ -51,6 +51,7 @@
 	}%
 }
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Helper functions for \lilyPrintImage below
 
@@ -102,74 +103,11 @@
 	}%
 }
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Generic command(s) to select a LilyPond Glyph %
-% These shouldn't be used by end users but      %
-% for designing predefined commands.            %
-% They select a glyph by a specific method and  %
-% return the #2 to be passed to \lilyPrint      %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Determine the glyph by its OpenType glyphName
-
-\usepackage{luaotfload,luacode}
-\begin{luacode}
-documentdata = documentdata or { }
-
-local stringformat = string.format
-local texsprint = tex.sprint
-local slot_of_name = luaotfload.aux.slot_of_name
-
-documentdata.fontchar = function (chr)
-local chr = slot_of_name(font.current(), chr, false)
-if chr and type(chr) == "number" then
-texsprint
- (\the\CatcodeTableLaTeX,
-  stringformat ([[\char"%X"]], chr))
-end
-end
-\end{luacode}
-
-\def\lilyGetGlyph#1{\directlua{documentdata.fontchar "#1"}}
-% Determine the glyph by its OpenType character number
-% (these may change with new versions of the fonts!)
-\newcommand*{\lilyGetGlyphByNumber}[1]{\char"#1 }
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Generic commands to print glyphs that aren't %
-% covered by predefined commands yet.          %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Print a glyph by its glyph name. %
-% Glyph names have to be looked up %
-% in the docs.                     %
-
-\newcommand*{\lilyGlyph}[2][]{%
-	% set defaults
-	\setkeys{lilyDesignOptions}{scale=1,raise=0}%
-	\lilyPrint[#1]{\lilyGetGlyph{#2}}%
-}
-
-% Determine the glyph by its Unicode number
-% (works for those glyphs that reside in 'standard' places)
-\newcommand*{\lilyGlyphByNumber}[2][]{%
-	% set defaults
-	\setkeys{lilyDesignOptions}{scale=1,raise=0}%
-	\lilyPrint[#1]{\lilyGetGlyphByNumber{#2}}%
-}
-
-% Don't 'determine' glyph positions but just use plain text.
-% This works for dynamics letters, numbers and + - . ,
-\newcommand*{\lilyText}[2][]{%
-	% set defaults
-	\setkeys{lilyDesignOptions}{scale=1,raise=0}%
-	\lilyPrint[#1]{#2}%
-}
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Load 'glyph' from an image (preferrably PDF).
 % Used for items that are created using LilyPond itself.
+
 \newcommand*{\lilyImage}[2][]{%
 	% set defaults
 	\setkeys{lilyDesignOptions}{scale=1, raise=0}%

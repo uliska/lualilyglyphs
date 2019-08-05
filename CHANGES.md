@@ -37,6 +37,7 @@ All changes should be present in the manual, but only the finished versions prin
 So the lines above the topmost bold version line represent the changes not available in the downloadable pdf documentation.
 
 
+- Replace \lilyOpticalSize with \lilySetWeight
 - Remove command \lilyGetGlyphByNumber
   \lilyGlyph can now discern itself if it has been passed a number
   or a string and will try to produce the appropriate glyph.
