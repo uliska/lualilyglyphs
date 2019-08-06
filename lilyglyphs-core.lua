@@ -185,6 +185,20 @@ core:add_formatters('Handling the printing of music symbols from *font*', 'lily'
         color = 'nocolor',
     },
 
+    image = {
+        comment = "Print an image file",
+        desc    = [[
+
+        ]],
+        client_options = {
+            lilyglyphs = { 'scale', 'voffset' }
+        },
+        func    = function(self, image, options)
+            return self:_format('output_image', image, options)
+        end,
+        color = 'nocolor',
+    },
+
     text = {
         comment = "Print some text (dynamics, number and + - . ,)",
         desc    = [[
