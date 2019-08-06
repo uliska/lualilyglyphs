@@ -61,6 +61,17 @@ function core:get_glyph_by_number(number)
     return string.format([[\char"%X]], number)
 end
 
+function core:scale_to_current_fontsize()
+--[[
+    Return a scaling factor for glyphimages to be adjusted relative to the
+    current font size.
+    10.95 is the "design size" for which the images have by default been
+    compiled. (TODO: check if that is correct, with more examples).
+    Image are scaled by this value depending on the current font size,
+    and this takes effect in addition to any design or local scale options.
+--]]
+    return lib.current_font_size() / (65536 * 10.95)
+end
 
 core:add_local_formatters{
 --[[
@@ -102,8 +113,9 @@ core:add_local_formatters{
 \includegraphics[scale=<<<scale>>>]{<<<image>>>}%%
 ]],
         func = function(self, image, options)
+            local scale = options.scale * self:scale_to_current_fontsize()
             local content = self:apply_template{
-                scale = options.scale,
+                scale = scale,
                 image = image
             }
             return self:_format('output', {
