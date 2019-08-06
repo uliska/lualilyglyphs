@@ -9,6 +9,7 @@ local err, warn, info, log = luatexbase.provides_module({
 })
 
 local lilyglyph_opts = lua_options.client('lilyglyphs')
+local lib = require(kpse.find_file('luaoptions-lib') or 'luaoptions-lib')
 
 -- Store font ids for the optical sizes of the current music font
 local font_sizes = {
@@ -82,7 +83,7 @@ core:add_local_formatters{
 {\fontspec[Scale=<<<scale>>>]{<<<font>>>-<<<weight>>>.otf}<<<content>>>}%%
 ]],
         func = function(self, content, options)
-            content = self:apply_template{
+            local content = self:apply_template{
                 scale   = options.scale,
                 font    = options.font,
                 weight  = options.weight,
@@ -97,8 +98,19 @@ core:add_local_formatters{
 
     output_image = {
         comment = "TBD: Output an image based music glyph",
-        template = [[]],
-        func = function(self, image, options) end,
+        template = [[
+\includegraphics[scale=<<<scale>>>]{<<<image>>>}%%
+]],
+        func = function(self, image, options)
+            local content = self:apply_template{
+                scale = options.scale,
+                image = image
+            }
+            return self:_format('output', {
+                voffset = options.voffset,
+                content = content
+            })
+        end,
     },
 }
 
@@ -158,11 +170,8 @@ core:add_formatters('Handling the printing of music symbols from *font*', 'lily'
             by its glyph name (canonical way) or its
             Unicode number (not really stable).
         ]],
-        options = {
-            ['scale'] = {'1', lua_options.is_num },
-            ['voffset'] = { '0', lua_options.is_num },
-            ['font'] = { 'emmentaler' }, -- TODO: Add other LilyPond fonts
-            ['weight'] = { '11', '13', '14', '16', '20', '23', '26' }
+        client_options = {
+            lilyglyphs = { 'scale', 'voffset', 'font', 'weight' }
         },
         func    = function(self, glyph, options)
             number = tonumber(glyph)
@@ -185,11 +194,8 @@ core:add_formatters('Handling the printing of music symbols from *font*', 'lily'
             - numbers
             - + - . ,
         ]],
-        options = {
-            ['scale'] = {'1', lua_options.is_num },
-            ['voffset'] = { '0', lua_options.is_num },
-            ['font'] = { 'emmentaler' }, -- TODO: Add other LilyPond fonts
-            ['weight'] = { '11', '13', '14', '16', '20', '23', '26' }
+        client_options = {
+            lilyglyphs = { 'scale', 'voffset', 'font', 'weight' }
         },
         func    =
         function(self, text, options)
