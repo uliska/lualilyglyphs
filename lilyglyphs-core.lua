@@ -11,25 +11,25 @@ local err, warn, info, log = luatexbase.provides_module({
 local lilyglyph_opts = lua_options.client('lilyglyphs')
 local lib = require(kpse.find_file('luaoptions-lib') or 'luaoptions-lib')
 
--- Store font ids for the optical sizes of the current music font
-local font_sizes = {
-    [11] = '', [13] = '', [14] = '', [16] = '',
-    [18] = '', [20] = '', [23] = '', [26] = ''
-}
 
-core = lua_formatters:new_client{
+-- This is intentionally stored in a global variable
+lilyglyphs = lua_formatters:new_client{
     name = 'lilyglyphs-core',
     namespace = {
         'lily'
-    }
+    },
 }
-
+-- Store font ids for the optical sizes of the current music font
+lilyglyphs._font_weights = {
+        [11] = '', [13] = '', [14] = '', [16] = '',
+        [18] = '', [20] = '', [23] = '', [26] = ''
+}
 
 --[[
     Internal functionality, to be used from the formatters, but not from outside
 --]]
 
-function core:get_glyph_by_name(name)
+function lilyglyphs:get_glyph_by_name(name)
 --[[
     Retrieve a (music) glyph through its (LilyPond) glyph name.
     Look up the font according to the currently active font weight,
@@ -37,7 +37,7 @@ function core:get_glyph_by_name(name)
     from it in LaTeX.
 --]]
     local weight = tonumber(lilyglyph_opts.options.weight)
-    local font_id = font_sizes[weight]
+    local font_id = self._font_weights[weight]
     local chr = luaotfload.aux.slot_of_name(font_id, name, false)
     if chr and type(chr) == "number" then
         -- TODO: Is it possible to return the character "as-is"?
@@ -51,17 +51,32 @@ from font '%s'.
     end
 end
 
-function core:get_glyph_by_number(number)
+function lilyglyphs:get_glyph_by_number(number)
 --[[
     Simply return the code to create a character at the given code point.
 --]]
     -- TODO: Is it possible to *check* whether a glyph is at that position?
-    -- luaotfload.aux.name_of_slot(font_sizes[weight], number)
+    -- luaotfload.aux.name_of_slot(lilyglyphs._font_weights[weight], number)
     -- doesn't seem to return meaningful values.
     return string.format([[\char"%X]], number)
 end
 
-function core:scale_to_current_fontsize()
+function lilyglyphs:process_design_options(options)
+    --TODO: WIP
+    return options
+end
+
+function lilyglyphs:_register_font_weight(weight, index)
+--[[
+    Store the font index for a font with a given size/weight index.
+    This is implicitly called from \lilySetFont and shouldn't be
+    used otherwise.
+--]]
+    lilyglyphs._font_weights[weight] = index
+end
+
+
+function lilyglyphs:scale_to_current_fontsize()
 --[[
     Return a scaling factor for glyphimages to be adjusted relative to the
     current font size.
@@ -73,7 +88,12 @@ function core:scale_to_current_fontsize()
     return lib.current_font_size() / (65536 * 10.95)
 end
 
-core:add_local_formatters{
+
+--[[
+    Create the generic formatters used by the actual commands
+--]]
+
+lilyglyphs:add_local_formatters{
 --[[
     These local formatters handle the printing to LaTeX,
     they should be used by the public formatters in this module.
@@ -113,6 +133,7 @@ core:add_local_formatters{
 \includegraphics[scale=<<<scale>>>]{<<<image>>>}%%
 ]],
         func = function(self, image, options)
+            options = self:process_design_options(options)
             local scale = options.scale * self:scale_to_current_fontsize()
             local content = self:apply_template{
                 scale = scale,
@@ -127,7 +148,7 @@ core:add_local_formatters{
 }
 
 
-core:add_formatters('Handling choice of music font', 'lily', {
+lilyglyphs:add_formatters('Handling choice of music font', 'lily', {
 --[[
     Handling selecting music font and "weights"
     ("Weights" are actually optional sizes of the LilyPond fonts,
@@ -136,25 +157,25 @@ core:add_formatters('Handling choice of music font', 'lily', {
 
     set_font = {
         comment = "Initialize a music font to be used",
-        template = [[
+        group_template = [[
 \begingroup
 <<<fonts>>>
 \endgroup
 ]],
-        get_font = [[
+        template = [[
 \fontspec{<<<font>>>-<<<weight>>>.otf}%%
-\directlua{lua_formatters:client('lilyglyphs-core').store_font(<<<weight>>>, font.current())}%%
+\directlua{lilyglyphs:_register_font_weight(<<<weight>>>, font.current())}%%
 ]],
         func = function(self, name)
             lua_options.set_option('lilyglyphs','font', name)
-            local result = ''
-            for k, _ in pairs(font_sizes) do
-                result = result..self:replace(self._get_font, {
+            local results = {}
+            for k, _ in pairs(lilyglyphs._font_weights) do
+                table.insert(results, self:apply_template{
                     font = name,
                     weight = k
                 })
             end
-            return self:apply_template(result)
+            return self:replace(self._group_template, table.concat(results, '\n'))
         end,
         color = 'nocolor',
     },
@@ -169,7 +190,7 @@ core:add_formatters('Handling choice of music font', 'lily', {
     }
 })
 
-core:add_formatters('Handling the printing of music symbols from *font*', 'lily', {
+lilyglyphs:add_formatters('Handling the printing of music symbols from *font*', 'lily', {
 --[[
     Public formatters with the fundamental and generic typesetting routines.
     These can be accessed from documents or from more specific commands.
@@ -223,22 +244,11 @@ core:add_formatters('Handling the printing of music symbols from *font*', 'lily'
         client_options = {
             lilyglyphs = { 'scale', 'voffset', 'font', 'weight' }
         },
-        func    =
-        function(self, text, options)
+        func    = function(self, text, options)
             return self:_format('output_text', text, options)
         end,
         color = 'nocolor',
     },
 })
 
-function core.store_font(size, index)
---[[
-    Store the font index for a font with a given size/weight index.
-    This is implicitly called from \lilySetFont and shouldn't be
-    used otherwise.
---]]
-    font_sizes[size] = index
-end
-
-
-return core
+return lilyglyphs
