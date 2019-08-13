@@ -274,7 +274,8 @@ lilyglyphs:add_local_formatters{
         func = function(self, content, options)
             options = self:process_design_options(options)
             local content = self:apply_template{
-                scale   = options.scale,
+                -- 1.5 is the global factor applicable to font glyphs.
+                scale   = design_mult(options.scale, '1.5'),
                 font    = options.font,
                 weight  = options.weight,
                 content = content

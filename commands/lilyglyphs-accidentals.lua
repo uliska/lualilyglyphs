@@ -15,7 +15,6 @@ accidentals:add_glyph_commands(
     {
         design = {
             voffset = '0.5',
-            scale = '1.5'
         }
     },
     {
@@ -43,7 +42,6 @@ accidentals:add_glyph_commands(
     {
         design = {
             voffset = '0.5',
-            scale = '1.5'
         }
     },
     {
@@ -91,7 +89,6 @@ accidentals:add_glyph_commands(
     {
         design = {
             voffset = '0.2',
-            scale = '1.5'
         }
     },
     {
