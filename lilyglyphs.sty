@@ -67,7 +67,25 @@
 }
 
 \addLuaFormatters{lilyglyphs-core.lua}
+\lilySetFont{emmentaler}
 
+% Add a “library” to lilyglyphs
+% (actually a luaformatters “client”)
+% - #1: library name
+%       has to be unique among all lilyglyphs libraries
+%       (within one document, including all loaded packages),
+%       will internally be prefixed with lilyglyphs-
+% - #2: Lua module filename
+%       Name of a file (which has to be available to 'require')
+%       This file must return a templatestable.
+\newcommand*{\addLilyglyphsLibrary}[1]{%
+  \directlua{
+    lilyglyphs:add_library(
+        require(kpse.find_file([[\string#1]]) or [[\string#1]]))
+  }
+}
+
+\addLilyglyphsLibrary{lilyglyphs-accidentals}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % TODO: Everything from here on is legacy code %

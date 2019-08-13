@@ -12,18 +12,131 @@ local lilyglyph_opts = lua_options.client('lilyglyphs')
 local lib = require(kpse.find_file('luaoptions-lib') or 'luaoptions-lib')
 
 
--- This is intentionally stored in a global variable
+-- `lilyglyphs` is a descendant of FormattersTable, a lua_formatters client,
+-- and it is intentionally stored in a global variable.
 lilyglyphs = lua_formatters:new_client{
     name = 'lilyglyphs-core',
     namespace = {
         'lily'
     },
 }
+-- Rebuild index method due to meddling with FormattersTable structure
+lilyglyphs.__index = function(t, key)
+    return lilyglyphs[key]
+    or lua_formatters[key]
+end
+
 -- Store font ids for the optical sizes of the current music font
 lilyglyphs._font_weights = {
         [11] = '', [13] = '', [14] = '', [16] = '',
         [18] = '', [20] = '', [23] = '', [26] = ''
 }
+
+function lilyglyphs:new_library(properties)
+--[[
+    Register a new library of lilyglyphs commands,
+    this is a variant of lua_formatters:new_client(), creating a
+    client with a mandatory 'lily-' prefix.
+--]]
+    if type(properties) == 'string' then
+        properties = { name = 'lilyglyphs-'..properties }
+    elseif properties.name then
+        properties.name = 'lilyglyphs-'..properties.name
+    else
+        err([[
+Trying to register lilyglyphs library
+without providing a 'name' property.]])
+end
+    -- force a namespace including `lily.`
+    properties.namespace = properties.namespace or {}
+    if not lib.contains_key(properties.namespace, 'lily') then
+        table.insert(properties.namespace, 'lily')
+    end
+    local library = lua_formatters:new_client(properties)
+    setmetatable(library, self)
+    library.__index = self
+    return library
+end
+
+function lilyglyphs:add_library(library)
+-- alias for use in lilyglyphs macro \addLilyglyphsLibrary
+    return lua_formatters:add(library)
+end
+
+
+--[[
+    Extending functionality of FormattersTable.
+    lilyglyphs is a FormattersTable descendant with special support
+    for adding lilyglyphs commands with as little redundancy as possible.
+--]]
+
+function lilyglyphs:add_command(key, client_options, properties)
+--[[
+    Generic function to add a lilyglyphs command.
+    Enforces a `lily.` namespace, by default macros will be named
+    \lilyNNN.
+    client_options is an array with keys that are to be set as
+    client_option values (=> all XXX commands have YYY as client options).
+--]]
+    local lily = key:find('lily')
+    if not lily or lily == 1 then key = 'lily.'..key end
+
+    --TODO: validate design options if given
+
+    -- initialize client options for `lilyglyphs` key
+    client_options = {
+        lilyglyphs = client_options or {}
+    }
+    -- initialize *all* client options
+    if properties.client_options then
+        for client, options in pairs(properties.client_options) do
+            client_options[client] = client_options[client] or {}
+            for k,v in pairs(options) do
+                client_options[client][k] = v
+            end
+        end
+    end
+    properties.client_options = client_options
+    self:add_formatter(key, properties)
+end
+
+function lilyglyphs:add_glyph_command(key, properties)
+--[[
+    Add a single glyph command.
+    Inject the formatter's design options into the function call.
+    Specify client options.
+--]]
+    properties.func = function(self, options)
+        options._design = self._design
+        return self:format('lily.glyph', properties.glyph, options)
+    end
+    self:add_command(key,
+        { 'scale', 'voffset', 'font', 'weight' },
+        properties)
+end
+
+function lilyglyphs:add_glyph_commands(commons, definitions)
+--[[
+    Add a set of glyph commands.
+    If two tables are given then the first is a "template" table
+    whose values are injected into every command. This is to avoid
+    redundant specification of e.g. design options.
+--]]
+    if not definitions then
+        -- transpose the first table to `definitions`
+        definitions = commons
+        commons = {}
+    end
+    for key, properties in pairs(definitions) do
+        -- inject commons
+        for k,v in pairs(commons) do
+            properties[k] = properties[k] or v
+        end
+        -- create command
+        self:add_glyph_command(key, properties)
+    end
+end
+
 
 --[[
     Internal functionality, to be used from the formatters, but not from outside
@@ -37,7 +150,7 @@ function lilyglyphs:get_glyph_by_name(name)
     from it in LaTeX.
 --]]
     local weight = tonumber(lilyglyph_opts.options.weight)
-    local font_id = self._font_weights[weight]
+    local font_id = lilyglyphs._font_weights[weight]
     local chr = luaotfload.aux.slot_of_name(font_id, name, false)
     if chr and type(chr) == "number" then
         -- TODO: Is it possible to return the character "as-is"?
@@ -61,8 +174,53 @@ function lilyglyphs:get_glyph_by_number(number)
     return string.format([[\char"%X]], number)
 end
 
+local function design_add(design_opt, loc_opt)
+--[[
+    Design option handler *adding* the value
+--]]
+    return tostring(tonumber(design_opt) + tonumber(loc_opt))
+end
+
+local function design_mult(design_opt, loc_opt)
+--[[
+    Design option handler *multiplying* the value
+--]]
+    return tostring(tonumber(design_opt) * tonumber(loc_opt))
+end
+
+-- Map design option to handlers
+local design_handlers = {
+    voffset = design_add,
+    scale = design_mult
+}
 function lilyglyphs:process_design_options(options)
-    --TODO: WIP
+--[[
+    Process design options in the final stage of outputting a lilyglyph item.
+    Package and local options are not set in absolute values with lilyglyphs
+    but relative to an original/designed appearance. Typically the option
+    values are *scaled* or *added* to the design option.
+    `self` refers to the Formatter object here.
+--]]
+    local design_options = options._design
+    if design_options then
+        local cur_value, handler
+        for k,v in pairs(design_options) do
+            cur_value = options[k]
+            if not cur_value then
+                -- no given option, use design option
+                options[k] = v
+            else
+                -- handle option relative to design options_obj
+                handler = design_handlers[k]
+                if handler then
+                    options[k] = handler(v, cur_value)
+                else
+                    warn("Unhandled design option")
+                    options[k] = cur_value
+                end
+            end
+        end
+    end
     return options
 end
 
@@ -81,8 +239,8 @@ function lilyglyphs:scale_to_current_fontsize()
     Return a scaling factor for glyphimages to be adjusted relative to the
     current font size.
     10.95 is the "design size" for which the images have by default been
-    compiled. (TODO: check if that is correct, with more examples).
-    Image are scaled by this value depending on the current font size,
+    compiled. (TODO: check if that is OK, with more examples).
+    Images are scaled by this value depending on the current font size,
     and this takes effect in addition to any design or local scale options.
 --]]
     return lib.current_font_size() / (65536 * 10.95)
@@ -114,6 +272,7 @@ lilyglyphs:add_local_formatters{
 {\fontspec[Scale=<<<scale>>>]{<<<font>>>-<<<weight>>>.otf}<<<content>>>}%%
 ]],
         func = function(self, content, options)
+            options = self:process_design_options(options)
             local content = self:apply_template{
                 scale   = options.scale,
                 font    = options.font,
