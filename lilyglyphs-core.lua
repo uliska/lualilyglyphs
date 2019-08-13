@@ -404,6 +404,9 @@ lilyglyphs:add_formatters('Handling the printing of music symbols from *font*', 
             lilyglyphs = { 'scale', 'voffset', 'font', 'weight' }
         },
         func    = function(self, text, options)
+            -- TODO: When it is possible to retrieve the character
+            -- (instead of the LaTeX text to produce the character)
+            -- replace left and right parens with their accidentals glyphs.
             return self:_format('output_text', text, options)
         end,
         color = 'nocolor',
