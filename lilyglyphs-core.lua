@@ -100,6 +100,29 @@ function lilyglyphs:add_command(key, client_options, properties)
     self:add_formatter(key, properties)
 end
 
+function lilyglyphs:add_commands(func, commons, definitions)
+--[[
+    Add a set of glyph/image commands.
+    The first argument is the function to use for the specific type of command.
+    If two tables are given then the first is a "template" table
+    whose values are injected into every command. This is to avoid
+    redundant specification of e.g. design options.
+--]]
+    if not definitions then
+        -- transpose the first table to `definitions`
+        definitions = commons
+        commons = {}
+    end
+    for key, properties in pairs(definitions) do
+        -- inject commons
+        for k,v in pairs(commons) do
+            properties[k] = properties[k] or v
+        end
+        -- create command
+        func(self, key, properties)
+    end
+end
+
 function lilyglyphs:add_glyph_command(key, properties)
 --[[
     Add a single glyph command.
@@ -117,24 +140,45 @@ end
 
 function lilyglyphs:add_glyph_commands(commons, definitions)
 --[[
-    Add a set of glyph commands.
-    If two tables are given then the first is a "template" table
-    whose values are injected into every command. This is to avoid
-    redundant specification of e.g. design options.
+    Add multiple glyph-based commands.
 --]]
-    if not definitions then
-        -- transpose the first table to `definitions`
-        definitions = commons
-        commons = {}
-    end
-    for key, properties in pairs(definitions) do
-        -- inject commons
-        for k,v in pairs(commons) do
-            properties[k] = properties[k] or v
+    self:add_commands(self.add_glyph_command, commons, definitions)
+end
+
+function lilyglyphs:add_image_command(key, properties)
+    --[[
+        Add a single image command.
+        Inject the formatter's design options into the function call.
+        Specify client options.
+
+        TODO (BIG todo): make this aware of the image *LilyPond source*
+        and allow automatic (re)generation of the image files if no
+        image is found (or a `force-compilation` option is set?)
+    --]]
+    properties.func = function(self, options)
+        local image_file = kpse.find_file(properties.image)
+        if not image_file then
+            warn(string.format([[
+Could not find image
+%s
+in lilyglyphs command
+\%s.
+Replacing with lilyglyphs logo ...
+]], properties.image, self:name()))
+            properties.image = 'lilyglyphs_logo' -- TODO: Replace with a better alternative
         end
-        -- create command
-        self:add_glyph_command(key, properties)
+        options._design = self._design
+        return self:format('lily.image', properties.image, options)
     end
+    self:add_command(key, { 'scale', 'voffset' }, properties)
+end
+
+function lilyglyphs:add_image_commands(commons, definitions)
+--[[
+    Add multiple image-based commands
+--]]
+
+    self:add_commands(self.add_image_command, commons, definitions)
 end
 
 
@@ -412,6 +456,15 @@ lilyglyphs:add_formatters('Handling the printing of music symbols from *font*', 
         end,
         color = 'nocolor',
     },
+})
+
+lilyglyphs:add_image_command('lilyglyphs', {
+    comment = 'lilyglyphs logo',
+    name = 'lilyglyphs',
+    image = 'lilyglyphs_logo',
+    design = {
+        voffset = '-0.8',
+    }
 })
 
 return lilyglyphs
