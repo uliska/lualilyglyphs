@@ -10,7 +10,7 @@ local err, warn, info, log = luatexbase.provides_module({
 
 local lilyglyph_opts = lua_options.client('lilyglyphs')
 local lib = require(kpse.find_file('luaoptions-lib') or 'luaoptions-lib')
-
+local kern = require(kpse.find_file('lilyglyphs-kern') or 'lilyglyphs-kern')
 
 -- `lilyglyphs` is a descendant of FormattersTable, a lua_formatters client,
 -- and it is intentionally stored in a global variable.
@@ -408,7 +408,7 @@ lilyglyphs:add_formatters('Handling the printing of music symbols from *font*', 
             -- TODO: When it is possible to retrieve the character
             -- (instead of the LaTeX text to produce the character)
             -- replace left and right parens with their accidentals glyphs.
-            return self:_format('output_text', text, options)
+            return self:_format('output_text', kern(text), options)
         end,
         color = 'nocolor',
     },

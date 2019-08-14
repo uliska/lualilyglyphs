@@ -1,0 +1,25 @@
+\documentclass{scrartcl}
+\usepackage{lilyglyphs}
+
+\newcommand{\kerningPairs}{%
+\directlua{dofile('lilyglyphs-kerning-pairs.lua')}}
+
+\begin{document}
+
+\section*{lilyglyphs Kerning Pairs}
+
+Some letter glyph pairs need kerning, and this document is a matrix of all
+combinations of the letters f, p, m, r, s, z, “.”, “,”, “+”, “-” and the
+numbers, given for all supported notation fonts.
+
+\subsection*{Kerning pairs for Emmentaler}
+
+\kerningPairs
+
+\subsection*{Kerning pairs for LilyJAZZ}
+
+\lilySetFont{lilyjazz}
+
+\kerningPairs
+
+\end{document}
