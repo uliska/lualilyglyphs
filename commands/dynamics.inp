@@ -35,50 +35,6 @@
 % and defines one subset of glyphs            %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Dynamic Script letters %
-%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%--------------
-% Single Glyphs
-
-% The dynamics letters don't have to be accessed through special commands
-% but can be written through \lilyText.
-% A chain of glyphs can be printed at once, 
-% normal space is possible between letters
-% Available glyphs are
-	% f for forte
-	% p for piano
-	% m for mezzo
-	% r for rin-
-	% s for s- (as in sf)
-	% z for -z (as in sfz)
-
-% \lilyDynamics is just a wrapper around \lilyText
-% specifying a default scaling factor
-\newcommand{\lilyDynamics}[2][]{%
-	\setkeys{lilyDesignOptions}{scale=1.5,raise=0}%
-	\lilyPrint[#1]{#2}%
-}
-
-%-------------------------
-% Combined Dynamic Scripts
-
-% Combined dynamics aren't generally necessary
-% as \lilyText takes any combination of characters as argument.
-% Some combinations seem to need additonal kerning,
-% so we provide predefined commands for them
-
-% rinforzando 
-\newcommand{\lilyRF}[1][]{%
-	\mbox{\lilyDynamics[#1]{r\hspace{0.035ex}f}}%
-}
-	
-% rinforzando with trailing z
-\newcommand{\lilyRFZ}[1][]{%
-	\mbox{\lilyDynamics[#1]{r\hspace{0.035ex}fz}}%
-}
-
 %------------------------
 % Graphical Dynamic Signs
 
