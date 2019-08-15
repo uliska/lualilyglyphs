@@ -27,6 +27,34 @@ local lilyglyphs_opts = lua_options.client('lilyglyphs')
         ['+'] = '.25',
       },
     defining the kerning between '0' and '+' as 0.25ex
+
+    NOTE: The following may be copied as a basis for a kerning pair subtable.
+    Replace the main key with the desired left hand side and the values with the
+    determined spacing (may be negative). Remove unmodified entries.
+
+    ['f'] = {
+        f = '.0',
+        p = '.0',
+        m = '.0',
+        r = '.0',
+        s = '.0',
+        z = '.0',
+        ['+'] = '.0',
+        ['-'] = '.0',
+        ['.'] = '.0',
+        [','] = '.0',
+        ['0'] = '.0',
+        ['1'] = '.0',
+        ['2'] = '.0',
+        ['3'] = '.0',
+        ['4'] = '.0',
+        ['5'] = '.0',
+        ['6'] = '.0',
+        ['7'] = '.0',
+        ['8'] = '.0',
+        ['9'] = '.0',
+    },
+
 --]]
 local data = {
     emmentaler = require('lilyglyphs-kern-emmentaler.lua'),
