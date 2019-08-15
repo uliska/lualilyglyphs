@@ -37,6 +37,7 @@ All changes should be present in the manual, but only the finished versions prin
 So the lines above the topmost bold version line represent the changes not available in the downloadable pdf documentation.
 
 
+- Replace multiple rest commands with *one* parametric \rest command
 - Remove \lilyDynamics because \lilyText is completely sufficent now.
 - Implement kerning for \lilyText
 - Automatically scale \lilyText by 1.5, removing the need for many
