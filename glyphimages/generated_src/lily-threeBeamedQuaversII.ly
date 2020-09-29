@@ -7,7 +7,7 @@
 %              https://github.com/openlilylib/lilyglyphs                 %
 %               http://www.openlilylib.org/lilyglyphs                    %
 %                                                                        %
-%  Copyright 2012-2013 Urs Liska and others, ul@openlilylib.org          %
+%  Copyright 2012-2020 Urs Liska and others, ul@openlilylib.org          %
 %                                                                        %
 %  'lilyglyphs' is free software: you can redistribute it and/or modify  %
 %  it under the terms of the LaTeX Project Public License, either        %
